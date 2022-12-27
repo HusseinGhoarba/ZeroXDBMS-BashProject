@@ -3,6 +3,8 @@ DBMS Project written in Bash Script
 <!-- ![](Images/logo-no-background.svg) -->
 <img src="Images/logo-no-background.svg" width=400 >
 -----------------------------------------------------
+
+
 TO RUN THE PROJECT :
 
 1- Go to dependencies file and install the requires
