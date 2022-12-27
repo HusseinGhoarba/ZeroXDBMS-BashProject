@@ -1,0 +1,33 @@
+    #!/usr/bin/bash
+
+# --------------------------------------------------------------------------------------------------------------
+#change color to blue before printing
+# Color variables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color variables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+# --------------------------------------------------------------------------------------------------------------
+
+#Listing Databases inside the HADatabase
+if [[ `ls` == "" ]];then
+    echo -e "${yellow}--------------------------------------------------------------------${clear}"
+    echo -e "${red}There is no Database yet${clear}"
+    echo -e "${yellow}--------------------------------------------------------------------${clear}"
+else
+    echo -e "${BOLD}`ls`${clear}"
+fi
+
+

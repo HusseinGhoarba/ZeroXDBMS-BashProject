@@ -1,0 +1,109 @@
+#!/user/bin/bash
+
+# ------------------------------------------------------------------------------------------------------------
+#change color to blue before printing
+# Color variables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color variables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+
+#------------------------------------------------------------------------------------------------
+#Function of rechoosing 
+re_choose_from_main_list_fun () {
+	echo -e "${yellow}Hint : Choose only Number from the following list${clear}"
+	echo -e "${cyan}1) Create Database ${clear}"
+	echo -e "${cyan}2) List Database ${clear}"
+	echo -e "${cyan}3) Drop Database ${clear}"
+	echo -e "${cyan}4) Connect Database ${clear}"
+	echo -e "${cyan}5) Quit ${clear}"
+}
+#-----------------------------------------------------------------------------------------------
+#Drop_Function 
+#------------------------------------------------------------------------------------------------
+Check_Before_Drop_DataBase()
+{
+    shopt -s extglob 
+    echo -e "${red} Are You Sure You Want To Drop ($name) Database (y/n) :${clear}"
+    read 
+    case $REPLY in 
+        [yY] ) 
+            rm -r $name
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${green} * $name Database was droped successfully.${clear}"           
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            rechoose_drop_db_options
+        ;;
+        [Nn] )
+            echo -e "${yellow}*Drop Step Canceled ${clear}"
+            rechoose_drop_db_options
+        ;;
+        * )
+            echo -e "${red}*Wrong Entery${clear}"
+            Check_Before_Drop_DataBase
+    esac
+}
+
+# --------------------------------------------------------------------------------------------------------------
+#Rechoose drop database options
+rechoose_drop_db_options (){
+    echo -e "${magenta}Please re-choose from the following list${clear}"
+    echo -e "${cyan}1) Drop Database ${clear}"
+	echo -e "${cyan}2) Cancel ${clear}"
+}
+#Function of checking existance of the given DB_Name
+Drop_DB_Func () {
+    read -p "Enter The Database Name : " name
+    shopt -s extglob
+    while true
+    do
+        if [[ -e $name ]];then
+            Check_Before_Drop_DataBase "$name"
+            break
+        elif [[ $name = "exit" ]];then
+            rechoose_drop_db_options
+            break
+        else
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${red} * $name not found .${clear}"   
+            echo -e "${red} * Please Enter Database Name again .${clear}"          
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            rechoose_drop_db_options
+            break
+        fi
+    done
+}
+#Droping DATABASE
+drop_db (){
+    echo -e "${magenta}Hint : Choose only Number from the following list : ${clear}"
+    select dbdrop in "Drop Database" "Cancel"
+    do  
+        echo -e "${magenta} $dbdrop ${clear}"
+        case $dbdrop in
+            "Drop Database" )
+                Drop_DB_Func 
+            ;;
+            "Cancel" )
+                break
+            ;;
+            * )
+                echo -e "${red}Entered Choice is not available***${clear}"
+                drop_db
+                break
+        esac
+    done
+}
+drop_db
+
