@@ -1,0 +1,96 @@
+#!/usr/bin/bash
+
+# --------------------------------------------------------------------------------------------------------------
+#change color to blue before printing
+# Color variables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color variables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+# --------------------------------------------------------------------------------------------------------------
+#Function of rechoosing 
+re_choose_from_main_list_fun () {
+	echo -e "${yellow}Hint : Choose only Number from the following list${clear}"
+	echo -e "${cyan}1) Create Database ${clear}"
+	echo -e "${cyan}2) List Database ${clear}"
+	echo -e "${cyan}3) Drop Database ${clear}"
+	echo -e "${cyan}4) Connect Database ${clear}"
+	echo -e "${cyan}5) Quit ${clear}"
+}
+rechoose_from_create_db_options (){
+    echo -e "${yellow}Hint : Choose only Number from the following list${clear}"
+	echo -e "${cyan}1) Create Database ${clear}"
+	echo -e "${cyan}2) Cancel ${clear}"
+}
+
+#Function of checking Constrains on the given name
+add_name_check_const_Exist_fun () {
+    read -p "Enter The Database Name : " name
+    shopt -s extglob
+    while true
+    do
+        if [[ $name = "exit" ]]; then
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${red} *  (exit) is already predefined command in the script.${clear}"           
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            break
+        elif [[ $name == *[" "'!':\|'-'/=~@\$%^\&*()+';''#']* || $name == [" "'!':\|'-'/=~@\$%^\&*()+';''#']*[" "'!':\|'-'/=~@\$%^\&*()+';''#']*  ]]; then
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${red}1- Given name shoud not contain special char.${clear}"
+            echo -e "${red}2- Given name shoud not contain space.${clear}"
+            echo -e "${red}3- Given name shoud not contain number at the beginning of the name.${clear}"
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            break
+        elif [[ $name == [0-99999]* || $name == *[0-99999]*  ]]; then
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${red} *  Given name shoud not contain numbers.${clear}"           
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            break
+        elif [[ -e $name ]];then
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${red} *  There is an existance file with the same name.${clear}"           
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            break
+        else
+            mkdir $name
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            echo -e "${green} *  Database is Created Successfully.${clear}"           
+            echo -e "${yellow}--------------------------------------------------------------------${clear}"
+            break
+        fi
+    done
+}
+
+#CREATING DATABASE
+create_db_fun (){
+    echo -e "${magenta}Hint : Choose only Number from the following list : ${clear}"
+    select dbcreation in "Add New Database" "Cancel"
+    do
+        echo -e "${magenta}$dbcreation${clear}"
+        case $dbcreation in
+            "Add New Database" )
+                add_name_check_const_Exist_fun
+                break
+            ;;
+            "Cancel" )
+                break 
+            ;;
+            * )
+                echo -e "${red}Entered Choice is not available***${clear}"
+                rechoose_from_create_db_options
+        esac
+    done
+}
+create_db_fun
