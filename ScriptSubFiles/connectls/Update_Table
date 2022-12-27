@@ -1,0 +1,322 @@
+#!/user/bin/bash
+
+#change color to blue before printing
+# Color variables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color variables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+
+select_from_connect_options () {
+    echo -e "${magenta}Please re-choose from the following list${clear}"
+    echo -e "${cyan}1) list table ${clear}"
+	echo -e "${cyan}2) create table ${clear}"
+    echo -e "${cyan}3) drop table ${clear}"
+    echo -e "${cyan}4) insert into table ${clear}"
+    echo -e "${cyan}5) select from table${clear}"
+    echo -e "${cyan}6) delete from table ${clear}"
+    echo -e "${cyan}7) update table ${clear}"
+    echo -e "${cyan}8) Exit ${clear}"
+}
+
+declare arr_Type
+declare arr_column
+declare Name
+declare new_val
+
+#------------------------------------------------------------------------------------------------
+#Back_To_Menu_Function 
+#------------------------------------------------------------------------------------------------
+Back_To_Menu ()
+{
+    echo -e "${green}*-------------------------------------- * Select Menu * ------------------------------------*${clear}"
+
+    select Menu in  "Insert Table Name Again" "Exit"
+    do
+        case $Menu in
+            "Insert Table Name Again")
+                read -p "Enter Table Name : " Name
+                Update_Func $Name
+                break
+                ;;
+            "Exit")
+                echo  "Exit"
+                break
+                ;;
+                *)
+                echo -e "${red}[ Error ] --- Enter Valid Number Please --- ${clear}" 
+                Back_To_Menu
+                ;;
+        esac
+
+    done
+        
+}
+
+
+
+#------------------------------------------------------------------------------------------------
+#Insert_Updated_values_Func
+#-----------------------------------------------------------------------------------------------
+check_input_data_type(){
+    while true
+    do
+     if [[ "${dtype_arr[$1]}" == "varchar" ]]; then
+
+            while ! [[ $2 =~ ^[a-zA-Z]*$ || $new_val =~ ^[a-zA-Z]*$ ]];
+            do
+                read -p "[ Error ] --- ${arr_column[$1]} should be varchar --- " new_val
+            done
+            break
+        elif [[ "${dtype_arr[$1]}" == "int" ]];then
+
+            while ! [[ $2 =~ ^[0-9]*$ || $new_val =~ ^[0-9]*$  ]];
+            do
+                read -p "[ Error ] --- ${arr_column[$1]} should be int --- " new_val
+            done
+            break
+        else
+            break
+        fi
+    done
+}
+Insert_Updated_values(){
+    x=0
+    line=$1
+    for i in `awk -F " " '{print $2}' $Name.meta`
+    do
+        dtype_arr[$x]=$i
+        x+=1
+    done
+
+
+    for ((i=1;i<${#arr_column[@]};i++));
+    do
+
+        read -p "Insert New Value Of (${arr_column[$i]}) :  " new_val
+        while true
+        do
+            if [[ -z $new_val ]];then
+                echo "${red} Invalid Input : ${clear}"
+                read -p "Re-Insert New Value Of (${arr_column[$i]}) :  " new_val
+            else
+                break
+            fi
+        done
+
+         if [[ "${dtype_arr[i]}" == "int" ]]; then
+            while ! [[ $new_val =~ ^[0-9]*$  ]];
+            do
+                read -p "[ Error ] --- ${arr_column[$i]} should be int --- " new_val
+            done
+        elif [[ "${dtype_arr[i]}" == "varchar" ]];then
+            while ! [[ $new_val =~ ^[a-zA-Z]*$ ]];
+            do
+                read -p "[ Error ] --- ${arr_column[$i]} should be varchar --- " new_val
+            done
+        fi
+
+        line=$line":"$new_val
+
+    done
+
+}
+
+#------------------------------------------------------------------------------------------------
+#Update_Full_Data_Func
+#-----------------------------------------------------------------------------------------------
+
+Update_Full_Data_Func ()
+{
+   
+    read -p "Insert your ${arr_column[0]} " PK
+   
+    if [[ -z $PK || `awk -F ":" '{print $1}' "$Name.data" | grep "$PK" ` == "" ]];then
+
+        echo "${red} Invalid Input : ${clear}"
+        Update_Full_Data_Func
+        
+    else
+
+        Insert_Updated_values $PK
+
+        old=`sed -n "$PK p" $Name.data`
+        sed -i "s/$old/$line/" $Name.data
+        echo -e "${green} data updated successfully${clear}"
+        select_from_connect_options
+
+    fi
+}
+
+#------------------------------------------------------------------------------------------------
+#Update_Specific_Value_Func
+#-----------------------------------------------------------------------------------------------
+
+Update_Specific_Value(){
+    x=0;y=0
+
+    read -p "Insert your ${arr_column[0]} " PK
+
+    if [[ -z $PK || `awk -F ":" '{print $1}' "$Name.data" | grep "$PK" ` == "" ]];then
+
+        echo "${red} the is no value : ${clear}"
+        Update_Specific_Value
+
+    else
+     
+        echo -e "${green}*-----------------------------------------------------------------------------------------*${clear}"
+        echo -e "${green} which value do you want to update ? \n${clear}"
+        echo -e "${yellow}---------- ${arr_column[@]} ----------${clear}"
+        read -p ">> " updated_col
+        if [[ $updated_col == "${arr_column[0]}" ]];then
+            echo "${red}primary key is auto incremented you can not update it${clear}"
+        fi
+
+        for i in "${!arr_column[@]}"
+        do
+            if [[ "${arr_column[$i]}" == $updated_col ]];then
+                Num=$i
+            fi
+        done
+        
+        if [[  "${arr_column[*]}" =~ "${updated_col}" ]];then
+
+            read -p "Enter new value of ($updated_col): " New_value
+            if [[ "${dtype_arr[$Num]}" == "varchar" ]]; then
+
+                while ! [[ $New_value =~ ^[a-zA-Z]*$ ]];
+                do
+                    read -p "[ Error ] --- ${arr_column[$Num]} should be varchar --- " New_value
+                done
+
+            elif [[ "${dtype_arr[$Num]}" == "int" ]];then
+
+                while ! [[ $New_value =~ ^[0-999]$ ]];
+                do
+                    read -p "[ Error ] --- ${arr_column[$Num]} should be int --- " New_value
+
+                done
+
+            fi
+            old=`sed -n "$PK p" $Name.data`
+            IFS=":"
+            for i in $old
+            do 
+                old_arr[$y]=$i":"
+                y+=1
+            done 
+
+        else
+            echo "there is no column with this name !!!"
+            echo "Re-enter your id please "
+            Update_Specific_Value
+        fi
+
+    fi
+    store=`echo "${old_arr[@]}" | sed "s|${old_arr[Num]}|$New_value":"|"`
+    sed -i 's,'"$old"','"$store"',' $Name.data
+    echo -e "${green}Value updated successfully${clear}"
+    select_from_connect_options
+}
+
+#------------------------------------------------------------------------------------------------
+#Update_Menu_Function 
+#------------------------------------------------------------------------------------------------
+
+Update_Menu ()
+{
+    echo -e "${green}*-------------------------------------- * Update Menu * ------------------------------------*${clear}"
+
+    select item in "Update Full User Data" "Update Specific Value" "Exit"
+        do
+            case $item in 
+                "Update Full User Data")
+                    Update_Full_Data_Func
+                    break
+                ;;
+                "Update Specific Value")
+                    Update_Specific_Value
+                    break
+                ;;
+                "Exit")
+                    echo " Exit"
+                    select_from_connect_options
+                    break
+                ;;
+                *)
+                echo -e "${red}[ Error ] --- Enter Valid Number Please --- ${clear}" 
+                Update_Menu
+            esac
+        done
+
+        
+}
+
+#------------------------------------------------------------------------------------------------
+#Update_Values_Func
+#-----------------------------------------------------------------------------------------------
+
+Update_Values_Func ()
+{
+
+    echo -e "${green}*------------------------------------- * Cloumn Name * ----------------------------------*${clear}"
+
+    for j in `awk -F " " '{print $1}' "$1.meta"` 
+    do 
+        arr_column+=("$j")
+    done
+
+    for j in `awk -F " " '{print $2}' "$1.meta"` 
+    do 
+        arr_Type+=("$j")
+    done
+
+    echo -e "${blue}`awk '{ gsub(" "," ---> "); }1' "$1.meta"`${clear}"
+
+    #calling Function to select what type of update
+    Update_Menu
+}
+
+#------------------------------------------------------------------------------------------------
+#Insert_Function 
+#------------------------------------------------------------------------------------------------
+Update_Func ()
+{
+     
+    if [[  $1 == \0 ]]; then 
+
+        echo -e "${red}[ Error ] --- Can't Read Value You Entered --- ${clear}"
+        Back_To_Menu
+
+    elif [[ `ls | grep -i "^$1.data$"` == "" && `ls | grep -i "^$1.meta$"` == ""  ]];then
+        
+        echo -e "${red}\n[ Error ] --- Table Name Not Exist --- ${clear}" 
+        Back_To_Menu  
+
+    else 
+
+        echo -e "${green}*------------------------------------- * Update Table * --------------------------------* \n${clear}"
+
+        Update_Values_Func $1
+
+    fi
+}
+
+#------------------------------------------------------------------------------------------------
+#Calling
+#-----------------------------------------------------------------------------------------------
+
+read -p "Insert Table Name: " Name 
+ Update_Func $Name

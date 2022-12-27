@@ -1,0 +1,166 @@
+#!/user/bin/bash
+
+# --------------------------------------------------------------------------------------------------------------
+#change color to blue before printing
+# Color varchariables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color varchariables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+
+#------------------------------------------------------------------------------------------------
+#check_Constrain_Table_Name_Function 
+#------------------------------------------------------------------------------------------------
+declare col_name
+declare name
+check_Constrain_Table_Name()
+{
+    read -p "Enter the Table name : " name
+    if [[ $name == "exit" ]];then 
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * (exit) is taked as predefined value.${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Constrain_Table_Name
+    fi 
+    if ! [[ `ls | grep -i "^$name.data$"` == "" && `ls | grep -i "^$name.meta$"` == ""  ]];then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * There is an Existance File With The Same Name.${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Constrain_Table_Name
+    elif [[ $name == *[" "'!':\|'-'/=~@\$%^\&*()+';''#']* || $name == [" "'!':\|'-'/=~@\$%^\&*()+';''#']*[" "'!':\|'-'/=~@\$%^\&*()+';''#']*  ]]; then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red}1- Given name shoud not contain special char.${clear}"
+        echo -e "${red}2- Given name shoud not contain space.${clear}"
+        echo -e "${red}3- Given name shoud not contain number at the beginning of the name.${clear}"
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Constrain_Table_Name 
+    elif [[ $name == [0-99999]* || $name == *[0-99999]*  ]]; then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * Given name shoud not contain numbers.${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Constrain_Table_Name
+    else 
+        echo -e "${yellow}\n--------------------------------------------------------------------${clear}"
+        echo -e "${green} * The Table Is Created Successfully *${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------\n${clear}"
+        touch "$name.data"   
+        touch "$name.meta" 
+    fi
+}
+#------------------------------------------------------------------------------------------------
+#check_Colmun_Name_Function 
+#------------------------------------------------------------------------------------------------
+check_Colmun_Name() {
+    read -p "Insert Name of Cloumn ($(($i+1))) : " col_name
+    if [[ -z $col_name ]];then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * Invalid Input * ${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Colmun_Name 
+    fi
+    if [[ $col_name == *[" "'!':\|'-'/=~@\$%^\&*()+';''#']* || $col_name == [" "'!':\|'-'/=~@\$%^\&*()+';''#']*[" "'!':\|'-'/=~@\$%^\&*()+';''#']*  ]]; then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red}1- Given name shoud not contain special char.${clear}"
+        echo -e "${red}2- Given name shoud not contain space.${clear}"
+        echo -e "${red}3- Given name shoud not contain number at the beginning of the name.${clear}"
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Colmun_Name
+    elif [[ $col_name == [0-99999]* || $col_name == *[0-99999]* || $col_name == *[0-99999] ]]; then
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * Given name shoud not contain numbers.${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        check_Colmun_Name
+    fi
+}
+#------------------------------------------------------------------------------------------------
+#check_Data_Type_Function 
+#------------------------------------------------------------------------------------------------
+check_Data_Type() {
+    while true
+    do
+        if [[ $2 == "int" || $2 == "varchar" || $d_type == "int" || $d_type == "varchar"  ]];then
+            line=$1" "$2      
+            break
+        else
+            echo -e "${red} Data type should be (varchar) or (int).${clear}"           
+            read -p "Insert The data_type of colmun $1 : " d_type
+        fi
+    done
+}
+#------------------------------------------------------------------------------------------------
+#Insert_Meta_Data_Function 
+#------------------------------------------------------------------------------------------------
+Insert_Meta_Data_Func ()
+{
+    read -p " Number of columns : " colmuns
+    if [[  $colmuns == [2-99999]  && $colmuns != "1" ]]; then
+        echo -e "${yellow}\n < Hint : The First Value Will be a Primary Key >\n${clear}"
+        for ((i=0;i<=$(($colmuns-1));i++));
+        do
+            if [[ $i == 0 ]];then
+                check_Colmun_Name 
+                read -p "Insert The data_type of colmun ($col_name) : " d_type
+                check_Data_Type $col_name $d_type
+                line="$col_name(PK)"" "$d_type
+            else               
+                check_Colmun_Name 
+                read -p "Insert The data_type of colmun ($col_name) : " d_type
+                check_Data_Type $col_name $d_type
+                line=$col_name" "$d_type
+            fi  
+            echo -e $line >> "$1.meta"
+            if [[ $i == $(($colmuns-1)) ]];then
+                echo -e "${cyan}\n < Tables in your database >\n${clear}"
+                source List_Table
+                echo -e "${yellow}\n < If you want to insert data in $name table reconnect to database or exit >\n${clear}"
+            fi
+        done
+    else
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        echo -e "${red} * Column number should be integer and grater than 1 column.${clear}"           
+        echo -e "${yellow}--------------------------------------------------------------------${clear}"
+        Insert_Meta_Data_Func
+    fi
+}
+#------------------------------------------------------------------------------------------------
+#Creat_check_Function 
+#------------------------------------------------------------------------------------------------
+Creat_check_Func() 
+{
+    select createdec in "Create Table" "Cancel"
+    do
+        echo -e "${green} $createdec ${clear}"
+        case $createdec in 
+            "Create Table" )
+                echo -e "${green}\n*----------------- * Create Table * -----------------*\n${clear}"
+                shopt -s extglob
+                check_Constrain_Table_Name   
+                Insert_Meta_Data_Func $name  
+                break 
+            ;;
+            "Cancel" )
+                select_from_connect_options
+                break
+            ;;
+            * )
+                echo -e "${red}*Wrong Entery${clear}"
+                Creat_check_Func
+        esac
+    done
+}
+#------------------------------------------------------------------------------------------------
+#Calling
+#------------------------------------------------------------------------------------------------
+Creat_check_Func
