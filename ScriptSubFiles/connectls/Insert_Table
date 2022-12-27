@@ -1,0 +1,120 @@
+#!/user/bin/bash
+
+#change color to blue before printing
+# Color varchariables
+BOLD="\033[1m"
+red='\033[0;31m'
+green='\033[0;32m'
+yellow='\033[0;33m'
+blue='\033[0;34m'
+magenta='\033[0;35m'
+cyan='\033[0;36m'
+# Clear the color after that
+clear='\033[0m'
+# Background Color varchariables
+bg_red='\033[0;41m'
+bg_green='\033[0;42m'
+bg_yellow='\033[0;43m'
+bg_blue='\033[0;44m'
+bg_magenta='\033[0;45m'
+bg_cyan='\033[0;46m'
+#------------------------------------------------------------------------------------------------
+#Insert_Function 
+#------------------------------------------------------------------------------------------------
+Insert_Func () {
+    declare -a arr_column=()
+    declare -a arr_Type=()
+    if [[  $1 == "" ]]; then
+
+        echo -e "${red}[ Error ] --- Can't Read Value You Entered --- ${clear}"
+        Back_To_Menu
+
+    elif [[ `ls | grep -i "^$1.data$"` == "" && `ls | grep -i "^$1.meta$"` == ""  ]];then
+
+        echo -e "${red}\n[ Error ] --- Table Name Not Exist --- ${clear}" 
+        Back_To_Menu
+
+    else 
+        echo -e "${green}*----------------- * Insert Into Table * -----------------*${clear}"
+        Insert_Values_Func $1
+    fi
+}
+#------------------------------------------------------------------------------------------------
+#Return_To_Menu_Fun
+#-----------------------------------------------------------------------------------------------
+Back_To_Menu () {
+    select Menu in  "Insert Table Name Again" "Exit"
+    do
+        echo -e "${green} $Menu ${clear}"
+        case $Menu in
+            "Insert Table Name Again")
+                read -p "Enter Table Name : " Table_Name
+                Insert_Func $Table_Name 
+                break
+                ;;
+            "Exit")
+                select_from_connect_options
+                break
+            ;;
+            *)
+                echo -e "${red}[ Error ] --- Enter Valid Number Please --- ${clear}" 
+                Back_To_Menu
+        esac
+    done
+}
+#------------------------------------------------------------------------------------------------
+#Insert_Values_Func
+#-----------------------------------------------------------------------------------------------
+Insert_Values_Func ()
+{
+    declare val
+    declare line
+    shopt -s extglob
+    echo -e "${yellow} Metadata of the table :${clear}"
+
+    for j in `awk -F " " '{print $1}' "$1.meta"` 
+    do 
+        arr_column+=("$j")
+    done
+    for j in `awk -F " " '{print $2}' "$1.meta"` 
+    do 
+        arr_Type+=("$j")
+    done
+    awk '{ gsub(" "," ---> "); }1' "$1.meta"
+    echo -e "${yellow}*------------------------------------------------------*${clear}"
+    for i in "${!arr_column[@]}"
+    do
+        if [[ $i = 0 ]];then
+            val=$(($(wc -l $1.data | cut -d " " -f1 ) +1 ))
+            line=$line$val":"
+        else
+            read -p "$i- Enter Value of ${arr_column[i]} : " Value
+            if [[ "${arr_Type[i]}" == "int" ]]; then
+                while ! [[ $Value =~ ^[0-9]*$  ]];
+                do
+                    read -p "[ Error ] --- $value should be int --- " Value
+                done
+            elif [[ "${arr_Type[i]}" == "varchar" ]];then
+                while ! [[ $Value =~ ^[a-zA-Z]*$ ]];
+                do
+                    read -p "[ Error ] --- $value should be varchar --- " Value
+                done
+            fi
+            if ! [[ $i == "${#arr_column[@]}" ]];then
+                line=$line$Value":"
+            else
+                line=$line$Value
+                break
+            fi
+        fi  
+    done
+    echo -e $line >> "$1.data"
+    line=""
+    select_from_connect_options
+}
+#------------------------------------------------------------------------------------------------
+#Calling
+#------------------------------------------------------------------------------------------------
+
+read -p "Enter Table Name : " Table_Name
+Insert_Func $Table_Name
