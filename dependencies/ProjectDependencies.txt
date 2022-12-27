@@ -1,0 +1,21 @@
+----------------------------------------------------------------------------
+Welcome from ZeroXDBMS.sh
+----------------------------------------------------------------------------
+
+Here is the commands needs to be installed before running ZeroXDBMS.sh script:
+
+----- For CentOS & RedHat --------------
+
+rpm -Uvh https://dl.fedoraproject.org/pub/epel/epel-release-latest-6.noarch.rpm
+yum install figlet
+
+yum install newt
+
+
+------ For Ubuntu -------------
+
+sudo apt-get update
+sudo apt-get install figlet
+
+sudo apt-get install whiptail
+

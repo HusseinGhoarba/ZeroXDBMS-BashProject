@@ -1,0 +1,566 @@
+---------------------------------------------------------------------------------------------------------------------------------
+											     	ZeroX-DBMS
+													  0X-DBMS
+												DATABASEALBASHWTAT
+touch HADatabaseAlbashwatEngine.sh
+---------------------------------------------------------------------------------------------------------------------------------
+Pre-requests: #after running immediately#
+1- echo "Hint -- Our Datbase Engine works on HADatabase Directory By Default" 
+2- declare -s direction
+3- if [[ -e "HADatabase" ]]; then
+	for i in {1..20}
+	do	
+		 if [[ -e "HADatabase$i" ]]; then
+		 else 
+			mkdir `$PWD`/HADatabase$i
+			direction="`$PWD`/HADatabase$i"
+			break
+		 fi	
+	done
+   else 
+	mkdir `$PWD`/HADatabase
+	direction = "`$PWD`/HADatabase"
+   fi	
+4- cd $direction
+---------------------------------------------------------------------------------------------------------------------------------
+inside it : 
+---- P(F-1)#listing Database Options 
+database-options() {
+1- select choice in "Create Database" "List Database" "Drop Database" "Connect Database"
+   do
+	echo "Hint : Choose only Number from the following list"
+	echo $choice
+	case $choice in 
+		"Create Database" )
+			Part 1-1 #--running create Database script--#
+		;;
+		"List Database" )
+			Part 1-2 #--running Listing Database script--#	
+		;;
+		"Drop Database" )
+			Part 1-3 #--running Dropping Database script--#
+		;;
+		"Connect Database" )
+			Part 1-4 #--running Dropping Database script--#	
+		;; 
+		* )
+			## add condition to make user loop if his choice is wrong##
+			echo "Please re-enter a correct number -- only number"
+
+	esac
+   done 
+}
+---------------------------------------------------------------------------------------------------------------------------------
+---------------------------------------------------------------------------------------------------------------------------------
+1-1 Create Database 
+------------------------------------------ Part 1-1 --------------------------------------------------------
+
+1- read -p "Enter the Database Name" dbname
+  - check constrains on the entered name ( unique - ....)
+  - check existance
+2- mkdir $dbname 
+3- cd $dbname
+4- select creation in "yes" "no" "y "n"
+   do
+	echo "do you want to create table : $creation " 
+	case $creation in 
+		"y" ) 
+			create-table() Part F-2 #..Runs Create table script
+		;;
+		"n" )
+			cd ../ 
+			database-options() #---P(F-1)#listing Database Options
+		;;
+		* ) 
+			## add condition to make user loop if his choice is wrong##
+			echo "Please re-enter a correct number -- only number"
+	esac 
+   done 
+
+
+---------------------------------------------------------------------------------------------------------------------------------
+1-2 List Database 
+------------------------------------------- Part 1-2 -------------------------------------------------------
+
+1- let databaseinc=1
+   for i in ls 
+	do 
+		if [[ i == "" ]]; then 
+			echo "Sir..There is no Database yet"
+		else
+			echo "Database$databaseinc : $i";
+			tableinc++;
+		fi
+	done
+---------------------------------------------------------------------------------------------------------------------------------
+1-3 Drop Database 
+------------------------------------------- Part 1-3 -------------------------------------------------------
+1- read -p "Enter the Database Name" deletedbname
+  - check constrains on the entered name ( unique - ....)
+  - check existance
+
+2- rm -r $deletedbname
+
+---------------------------------------------------------------------------------------------------------------------------------
+1-4 Connect Database 
+------------------------------------------- Part 1-4 -------------------------------------------------------
+1- read -p "Enter the Database Name" connectdbname
+  - check constrains on the entered name ( unique - ....)
+  - check existance
+2- cd $connectdbname
+3- select menu in "list table" "create table" "drop table" "insert into table" "select from table" "delete from table" "update table" 
+    do 
+	case $menu in 
+		"list table" )  			#1.4.1
+			let tableinc=1
+			for i in ls 
+			do 
+				if [[ $i == "" ]];then
+					echo "Sir..There is no table in your Database yet"
+				else 
+					echo "table$tableinc : $i";
+					tableinc++;
+				fi
+			done
+			;;
+		"create table" )                #1.4.2
+			repeated-function(){     #-- P F-2 -- repeated of wrong number input for columns of tables
+				while true 
+				do 
+					echo "Error : your input isnot numbers"
+					echo "Please add number"
+					read -p "Enter Number of Columns inside your table" cnumber
+					case $cnumber in
+						+[0-9] )
+							cnum=$cnumber
+							break
+						;;
+						"exit" ) 
+							break 
+				    		#go to script of connect database
+						;;
+						* )
+							echo "you entered wrong input again"
+							repeated-function()
+						;;
+					esac 
+				done 
+			}
+			
+			read-colnum(){
+				shopt -s extglob 
+				while true 
+				do
+					read -p "Enter Number of Columns inside your table" colnumber
+					case $colnumber in 
+						+[0-99] )
+							cnum=$colnumber
+							break
+						;;
+						"exit" ) 
+							#go to script of connect database
+							break
+						;;
+						* )
+							repeated-function()
+					esac
+				done
+				
+			}
+
+			metadata-fun(){
+				echo "Hint: Your First Column has the Primary Key Constraint so be careful in your choice"
+				for(( i=0; i < cnum; i++ ))
+				do	
+					if [[ i == 0 ]]then; 
+				    	read -p "Enter name of Primary key column : " coll 
+						 - check constrains
+						 - check existance 
+						coll=${coll}+"*"
+						echo "choose column data type : " 
+						select datatype in "Integer" "String"
+						do 
+							echo $datatype
+							case $datatype in 
+								"Integer" )
+									dtypearr[$i]="Int"
+								;;
+								"String" )
+									dtypearr[$i]="Varchar"
+					else 
+						read -p "Enter name of column $i : " coll
+						echo "choose column data type : " 
+						select datatype in "Integer" "String"
+						do 
+							echo $datatype
+							case $datatype in 
+								"Integer" )
+									dtypearr[$i]="Integer"
+								;;
+								"String" )
+									dtypearr[$i]="String"
+						done	
+					fi
+					colsarr[$i]=$coll
+				done
+				
+				printf ' : %s' "${colsarr[@]}" > $tbname
+				printf ' : %s' "${dtypearr[@]}" >> $tbname
+				}
+
+			create-table(){      #-- P F-2 -- Creation of tables
+				read -p "Enter Table Name" tbname
+				  - check constrains on the entered name ( unique - ....)
+  				  - check existance
+				touch $tbname
+				let cnum
+				declare -a colsarr
+				declare -a dtypearr
+				read-colnum()
+				metadata-fun()
+			}
+			create-table()
+		;;
+		"drop table" )     #1.4.3
+			read -p "Enter the table Name you want to delete : " deletetbname
+  				- check constrains on the entered name ( unique - ....)
+  				- check existance
+			rm $deletetbname
+		;;
+		"insert into table": ) #1.4.4
+			inserting_fun (){
+				Primary_key () {
+					read -p "enter value of $i" value                   
+					valuearr[$j]=$value ":"  
+					while true
+					do                  
+					if [[ `cut -d ":" -f1 $inserttotbname | grep "${valuearr[0]}"` == "" ]];then 
+						valuearr[$j]=$value " "":"
+					break;
+					else  
+					echo " PK should be uniqe"
+					read -p "enter value of $i" value
+					fi
+				done
+				}
+				read -p "Enter the table Name you want to inset into : " inserttotbname
+				echo "Columns in this table :"
+				sed -n '1,2p' $inserttotbname
+				IFS=":" read -a myarray <<< `head -1 $inserttotbname`
+				echo ${#myarray[@]}
+				declare -a valuearr  	
+				let j=0
+		
+				for i in "${myarray[@]}"
+				do
+				if [[ i = 0 ]];then
+					Primary_key 
+				else  
+					read -p "enter value of $i" value
+					valuearr[$j]=$value" "":"
+					j=$((j+1))
+				fi                
+				done
+				declare -a AA 
+				IFS=":" read  AA <<< ${valuearr[@]} 
+				echo ${AA[@]} >> $inserttotbname
+				echo "-----------------------------------------"
+				sed " t" $inserttotbname
+			}	
+		;;
+		"select from table": ) #1.4.5
+			read -p "Enter the table name to select from : " selfromtbname
+  				- check constrains on the entered name ( unique - ....)
+  				- check existance
+			selftbnamex=$selfromtable
+			echo "Metadata of the choosen table : "
+			sed -n '1,2p' $selftbnamex		
+			echo "Please choose the number of your choice : "
+				select-by-row () { #######################################################
+					select selectby in "select by primary key" "select by row number" "select row with a specifc value" "exit"
+					do
+						echo $selectby
+						case $selectby in 
+							"select by primary key" )
+								read -p "Please enter value of your primary key : " pkval
+									-check constrains 
+									-check existance
+								awk '
+								BEGIN{FS=":"}
+								{
+									if($1==$pkval){
+										print $0
+									}
+								} 
+								END{} ' selftbnamex
+							;;
+							"select by row number" )
+								read -p "Please enter row number : " rwnumber
+									-check constrains 
+									-check existance
+								sed -n '/$rwnumber/p'$selftbnamex
+							;;
+							"select row with a specifc value" ) 
+								read -p "Please specify the column number which we will search in : " specifycol
+									-check constrains	
+									-check existance
+								read -p "Please enter searching value : " specifyrow
+									-check constrains	
+									-check existance
+								awk '
+								BEGIN{FS=":"}
+								{
+									if($specifycol==$specifyrow){
+										print $0
+									}
+								} 
+								END{} ' $selftbnamex 
+							;;
+							"exit" )
+								break
+								selection-fun ()
+							*)
+							select-by-row ()
+							esac 
+						esac 
+						}	
+					select-by-column () { ######################################################
+						read -p "Please enter the column number : " selcolnum
+							-check constrains
+							-check existance
+						cut -d : -f$selcolnum $selftbnamex
+					}
+					select-multi-row (){ ##################################################################
+						select multirow in "Select from-to rows" "select specific rows" "exit"
+						do 
+						echo $multirow 
+						case $multirow in 
+							"select from-to rows" )
+								read -p "please enter first number of rows range : " 1strange
+									-check constrains
+									-check existance
+								read -p "please enter second number of rows range : " 2ndrange
+									-check constrains
+									-check existance
+								sed -n '"$1strange","$2ndrange""p"' $selftbnamex
+							;;
+							"select specific rows" )
+								read -p "Enter number of rows to display : " nrows
+									-check constrains
+									-check existance
+								declare -a rowarr
+								for (( i=0; i < mrows; i++))
+								do
+									read -p "Enter number of row $i : " nrow
+										-check constrains
+										-check existance
+									sed -n '"$nrow"p'' $selftbnamex
+								done 
+							;;
+							"exit" )
+								selection-fun ()
+								break
+							;;
+							* )
+								select-multi-row ()
+								break
+							esac
+						done
+						}
+			selection-fun () {
+			select selection in "Select a specific row" "Select a Specific column" "Select Multiple rows" "Select all table data" 
+			do 
+				echo $selection 
+				case $selection in 
+					"Select a specific row" )
+						select-by-row ()
+					;;
+					"Select a Specific column" )
+						select-by-column ()
+					;;
+					"Select Multiple rows" )
+						select-multi-row ()
+					;;
+					"Select all table data" )
+						sed -n '3,$p' $selftbnamex
+					;;
+					"exit" ) 
+						exit
+					;;
+					* )
+					selection-fun ()
+			}
+			selection-fun ()
+		;;
+		"delete from table":  #1.4.6
+			read -p "Enter the table name  to delete from : " delfromtbname
+  				- check constrains
+  				- check existance	
+			deftbnamex=$delfromtable
+			echo "Metadata of the choosen table : "
+			sed -n '1,2p' $deftbnamex		
+			delete-row-fun(){ 
+				select delrowoptions in "Use Primary Key" "Use a specifc value" "exit"
+				do
+					echo $delrowoptions
+					case $delrowoptions in 
+						"Use Primary Key" ) 
+							read -p "Enter Primary Key value for record you want to delete : " pkdelrow
+								-check constrains
+							-check existance
+							sed -i '/$pkdelrow/d' $deftbnamex
+						;;
+						"Use a specifc value" )
+							read -p "Enter number of column you want to specify value from : " spcol
+								-check constrains	
+								-check existance
+							read -p "Enter value for record you want to delete : " sprow
+								-check constrains
+								-check existance
+							awk '
+							BEGIN{FS=":"}
+							{
+								if($spcol==$sprow){
+								sed -i '/sprow/d' $deftbnamex
+								}
+							} 
+							END{} ' deftbnamex 
+						;;
+						"exit" )
+							********************************
+							break
+						;;
+						* )
+							delete-row-fun()
+							break
+					esac
+				done
+			}
+			##############################################################
+			delete-from-fun () {
+				select deletevalue in "Delete row" "Delete table data" "exit"
+				do 
+					echo $deletevalue 
+					case $deletevalue in
+						"Delete row" )
+							delete-row-fun()
+						;;
+						"Delete table data" )
+							sed -i '3,$d' $deftbnamex
+				done
+			}		
+			delete-from-fun ()
+		;;
+		"update table":  #1.4.7
+			
+			read -p "Enter the table name to update it : " updatetbname
+  				- check constrains
+  				- check existance	
+			echo "Metadata of the choosen table : "
+			sed -n '1,2p' $deftbnamex	
+
+			updaterow_fun () { #############################################################3
+				read -p "enter the value of Primary Key of your record : " pkuprow
+					-check constrains
+					-check existance
+				echo "Old values of the entered row" 
+				sed -n '"$pkuprow"p' $updatetbname
+				echo "Please enter the new values" 
+				Primary_key () {
+					read -p "enter value of $i" value                   
+						valuearr[$j]=$value ":"  
+					while true
+					do                  
+						if [[ `cut -d ":" -f1 $updatetbname | grep "${valuearr[0]}"` == "" ]];then 
+							valuearr[$j]=$value " "":"
+							break;
+						else  
+							echo " PK should be unique"
+							read -p "enter value of $i" value
+						fi
+					done
+				}
+				echo "Columns in this table :"
+				sed -n '1,2p' $updatetbname
+				IFS=":" read -a myarray <<< `head -1 $updatetbname`
+				echo ${#myarray[@]}
+				declare -a valuearr  	
+				let j=0
+				for i in "${myarray[@]}"
+				do
+					if [[ i = 0 ]];then
+						Primary_key 
+					else
+						read -p "enter value of $i" value
+						valuearr[$j]=$value" "":"
+						j=$((j+1))
+					fi                
+				done
+	
+				IFS=":" read -a AA <<< ${valuearr[@]} 
+				sed -i 's/`sed -n '"$pkuprow"p' $updatetbname`/${AA[@]}/p" $updatetbname 
+				echo "-----------------------------------------"
+				echo "Your new entered values : "
+				echo "${AA[@]}"
+				}
+
+			update_specifc_value () {
+				read -p "Enter value Primary Key which meet your target : " pkspvalupdate
+					-check constrains
+					-check existance
+				read -p "Enter number of column which meet your target : " colspvalupdate
+					-check constrains
+					-check existance
+				read -p "Enter the target value you want to update : " targetvalue
+					-check constrains
+					-check existance
+				read -p "Enter the new value you want to add : " newvalue
+					-check constrains
+				if [[ $colsdvalupdate == 1 ]];then
+					echo "--------------------------------------------------------"
+					echo "Sorry.. You can not change Primary Key value"
+					echo "To do this:"
+					echo "1- go and delete the value of this row"
+					echo "2- go and insert this row again with the new PK value"
+					echo "--------------------------------------------------------"
+				else
+					awk '
+					BEGIN{FS=":"}
+					{
+						i=1
+						if($1==$pkval){
+							while (i <= NR)
+							do
+								sed -i 's/"$targetvalue"/"$newvalue"/p" $updatetbname
+							done
+						}
+					} 
+					END{} ' selftbname
+				fi
+			}
+			update_fun (){
+				select updates in "update a specifc row" "update a specifc value" "exit" 
+				do
+					echo $updates
+					case $updates in 
+						"update a specifc row" ) 
+							updaterow_fun
+						;;
+						"update a specifc value" )
+							update_specifc_value
+						;;
+						"exit"
+						# **************************
+						;;
+						* )
+						update_fun
+					esac
+				done
+			}
+			update_fun
+		;;
+		"exit" )  #1.4.8
+			# **************************
+		* )
+			echo " Re-run your prograom"
+		esac
